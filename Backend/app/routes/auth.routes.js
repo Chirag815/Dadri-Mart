@@ -6,7 +6,9 @@ import {
   refreshAccessToken,
   getCurrentUser,
   updateUserAddress,
-  getAllUsers
+  getAllUsers,
+  requestOTP,
+  verifyOTP
 } from "../controllers/auth.controllers.js";
 import { verifyJWT, authorizeRoles } from "../middlewares/auth.middlewares.js";
 
@@ -15,6 +17,8 @@ const router = Router();
 // public routes
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
+router.route("/request-otp").post(requestOTP);
+router.route("/verify-otp").post(verifyOTP);
 router.route("/refresh-token").post(refreshAccessToken);
 
 // secured routes

@@ -1,106 +1,48 @@
-# Kartly
+# Kartly - Single Store Hyperlocal Grocery Platform
 
-Kartly is a full-stack quick commerce platform built to understand how modern grocery delivery systems actually work behind the scenes.
+**Kartly** is a full‑stack quick‑commerce demo that implements a **single‑store hyperlocal grocery** experience.
 
-The goal of this project is not just to create another grocery delivery UI, but to deeply explore the engineering challenges involved in building real-world hyperlocal delivery platforms like Blinkit and Zepto.
+### Core Business Model
+- One grocery store serves the entire service area.
+- Customers never see which physical store fulfills an order – the system abstracts that detail.
+- All orders are **Cash‑On‑Delivery (COD)** only; no online‑payment integrations remain.
+- Authentication is **passwordless OTP** (phone + 4‑digit code).
+- Users are of three roles: **customer**, **vendor**, **admin**.
+- The admin UI is hidden behind a secret route (`/admin-login`).
 
-This project focuses on things like:
+### Customer Features
+- OTP login (customer or vendor).
+- Browse products by category and search.
+- Cart management (add, remove, quantity).
+- Pincode availability check (service area gating).
+- Simple profile page showing name, email, phone, address, and pincode.
+- Address management – choose a preset location or enter a custom address.
+- Order placement with live order tracker.
+- Order history.
 
-* Real-time order lifecycle
-* Inventory and stock handling
-* Store and warehouse management
-* Delivery partner workflows
-* Authentication and role-based access
-* Live order tracking
-* Scalable backend architecture
-* Optimized database design
-* Production-grade APIs
+### Vendor Features
+- Dedicated **Vendor Dashboard** (replaces former rider portal).
+- View New, Active, Delivered, and Cancelled orders.
+- Accept order, mark Packing, Ready‑for‑Delivery, Delivered, and **Payment Received**.
+- Full order timeline with customer details, notes, and COD status.
 
-## Why I Built This
+### Admin Features
+- Hidden admin route (`/admin-login`).
+- Manage service area pincodes.
+- Configure store opening/closing hours.
+- View analytics (sales, order counts, etc.).
 
-Most grocery delivery clones only focus on frontend screens.
+### Technical Stack
+- **Frontend:** React, react‑router‑dom, lucide‑react, vanilla CSS with modern design (glassmorphism, gradients, micro‑animations).
+- **Backend:** Node.js, Express, MongoDB.
+- **State Management:** React Context (`AppContext`).
+- **No inventory quantity tracking** – products are assumed to have unlimited stock.
+- **No online‑payment gateways** – only COD flow.
 
-I wanted to build something much closer to how an actual quick-commerce system operates internally — including order orchestration, delivery flow, inventory synchronization, and admin/store operations.
-
-This project is also helping me improve my understanding of:
-
-* system design
-* scalable backend development
-* real-world database modeling
-* full-stack architecture
-* production-grade development practices
-
-## Core Features
-
-### Customer
-
-* Browse products by category
-* Search and filter products
-* Cart and checkout system
-* Address management
-* Order placement
-* Live order tracking
-* Payment integration
-* Order history
-
-### Store / Admin
-
-* Product management
-* Inventory management
-* Order management
-* Store analytics
-* Delivery assignment
-* User management
-
-### Delivery Partner
-
-* Accept/reject deliveries
-* Live delivery status updates
-* Earnings dashboard
-* Navigation support
-
-## Tech Stack
-
-### Frontend
-
-* React
-* Tailwind CSS
-* Redux Toolkit
-* React Query
-
-### Backend
-
-* Node.js
-* Express.js
-* MongoDB
-* Redis
-* Socket.IO
-
-## Project Goals
-
-* Build a production-grade full-stack application
-* Learn scalable architecture patterns
-* Understand quick-commerce business logic
-* Practice clean backend structuring
-* Simulate real startup-level engineering
-
-## Current Status
-
-This project is actively being built and improved continuously.
-
-More features, optimizations, and infrastructure improvements will be added over time.
-
-## Future Plans
-
-* Microservices architecture
-* Recommendation engine
-* Demand prediction
-* Route optimization
-* Real-time delivery map
-* AI-based inventory forecasting
-* Multi-store support
-* Vendor onboarding
+### Project Status
+- All core requirements are implemented and verified.
+- The codebase is cleanly separated by role and ready for future multi‑vendor expansion.
 
 ---
 
-Built with the intention of learning deeply, building seriously, and thinking beyond tutorial-level projects.
+Built for learning and demonstration of hyperlocal quick‑commerce workflows.

@@ -1,27 +1,32 @@
 import orderModel from "../models/order.models.js";
-import inventoryModel from "../models/inventory.models.js";
 import productModel from "../models/product.models.js";
 import storeModel from "../models/store.models.js";
 import userModel from "../models/user.models.js";
 
 export const createOrder = async (req, res) => {
   try {
-    const { storeId, items, deliveryAddressText, coordinates } = req.body;
+    const { items, deliveryAddressText, coordinates, notes } = req.body;
 
-    if (!storeId || !items || !items.length || !deliveryAddressText || !coordinates) {
+    if (!items || !items.length || !deliveryAddressText || !coordinates) {
       return res.status(400).json({
         success: false,
-        message: "Store, items, address text, and location coordinates are required"
+        message: "Items, address text, and location coordinates are required"
       });
     }
 
-    // 1. Fetch store
-    const store = await storeModel.findById(storeId);
+    // 1. Fetch default store (single store system)
+    let store = await storeModel.findOne({ isActive: true });
     if (!store) {
-      return res.status(404).json({ success: false, message: "Store not found" });
+      // Fallback: Create default store if database is empty
+      store = await storeModel.create({
+        name: "Connaught Place Dark Store",
+        address: "Radial Road 3, Connaught Place, New Delhi",
+        location: { type: "Point", coordinates: [77.2197, 28.6304] },
+        isActive: true
+      });
     }
 
-    // 2. Validate stock levels for all items before making any modifications
+    // 2. Validate items and catalog prices (Stock quantity checks disabled by business requirement)
     const validatedItems = [];
     let subtotal = 0;
 
@@ -31,57 +36,42 @@ export const createOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: "Quantity must be greater than 0" });
       }
 
-      // Find inventory
-      const inventory = await inventoryModel.findOne({ store: storeId, product: productId }).populate("product");
-      if (!inventory) {
+      const product = await productModel.findById(productId);
+      if (!product) {
         return res.status(404).json({
           success: false,
-          message: `Product not found in this store's inventory`
-        });
-      }
-
-      if (inventory.stock < quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient stock for product: ${inventory.product.name}. Available: ${inventory.stock}`
+          message: `Product not found: ${productId}`
         });
       }
 
       validatedItems.push({
         product: productId,
         quantity,
-        price: inventory.product.price
+        price: product.price
       });
 
-      subtotal += inventory.product.price * quantity;
-    }
-
-    // 3. Atomically decrement stock in database
-    for (const item of validatedItems) {
-      await inventoryModel.updateOne(
-        { store: storeId, product: item.product },
-        { $inc: { stock: -item.quantity } }
-      );
+      subtotal += product.price * quantity;
     }
 
     const deliveryFee = subtotal > 500 ? 0 : 25; // free delivery above Rs 500
     const total = subtotal + deliveryFee;
 
-    // 4. Create Order record
+    // 3. Create Order record (paymentMethod defaults to COD, paymentStatus defaults to PENDING)
     const order = await orderModel.create({
       customer: req.user._id,
-      store: storeId,
+      store: store._id,
       items: validatedItems,
       subtotal,
       deliveryFee,
       total,
-      status: "CONFIRMED",
+      status: "PLACED",
       deliveryAddress: {
         text: deliveryAddressText,
         coordinates // [longitude, latitude]
       },
-      paymentMethod: "CARD",
-      paymentStatus: "PAID" // Automatically paid in simulation
+      paymentMethod: "COD",
+      paymentStatus: "PENDING",
+      notes: notes || ""
     });
 
     const populatedOrder = await orderModel.findById(order._id)
@@ -127,19 +117,17 @@ export const getOrderById = async (req, res) => {
     const order = await orderModel.findById(req.params.id)
       .populate("store")
       .populate("items.product")
-      .populate("customer", "fullname username email address")
+      .populate("customer", "fullname username email address phone")
       .populate("rider", "fullname username role address");
 
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Auth validation: only customer, rider assigned, or admin can view
     const isCustomer = order.customer._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "admin";
-    const isRider = order.rider?.toString() === req.user._id.toString() || req.user.role === "rider";
+    const isAdminOrVendor = ["admin", "vendor"].includes(req.user.role) || req.user.role === "admin"; // compatibility
 
-    if (!isCustomer && !isAdmin && !isRider) {
+    if (!isCustomer && !isAdminOrVendor) {
       return res.status(403).json({
         success: false,
         message: "Forbidden: You are not authorized to view this order"
@@ -161,16 +149,11 @@ export const getOrderById = async (req, res) => {
 
 export const getStoreOrders = async (req, res) => {
   try {
-    const { storeId } = req.query;
-    const filter = {};
-    if (storeId) {
-      filter.store = storeId;
-    }
-
-    const orders = await orderModel.find(filter)
+    // Return all orders for store admin / vendors
+    const orders = await orderModel.find({})
       .populate("store")
       .populate("items.product")
-      .populate("customer", "fullname username email address")
+      .populate("customer", "fullname username email address phone pincode")
       .populate("rider", "fullname username role")
       .sort({ createdAt: -1 });
 
@@ -191,7 +174,16 @@ export const updateOrderStatus = async (req, res) => {
     const { status, otp } = req.body;
     const { id } = req.params;
 
-    const allowedStatuses = ["CONFIRMED", "PICKING", "PACKED", "ASSIGNED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"];
+    const allowedStatuses = [
+      "PLACED",
+      "ACCEPTED",
+      "PACKING",
+      "READY_FOR_DELIVERY",
+      "DELIVERED",
+      "PAYMENT_RECEIVED",
+      "CANCELLED"
+    ];
+
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid order status value" });
     }
@@ -201,33 +193,18 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Role verification
-    if (req.user.role === "rider" && !["OUT_FOR_DELIVERY", "DELIVERED"].includes(status)) {
-      return res.status(403).json({
-        success: false,
-        message: "Riders are only authorized to transition orders to OUT_FOR_DELIVERY or DELIVERED"
-      });
+    // Status verification for DELIVERED OTP
+    if (status === "DELIVERED" && order.status !== "DELIVERED") {
+      if (otp && order.otp !== otp.toString().trim()) {
+        return res.status(400).json({ success: false, message: "Invalid delivery OTP. Please verify code with customer." });
+      }
     }
 
-    // OTP verification for DELIVERED status
-    if (status === "DELIVERED") {
-      if (!otp) {
-        return res.status(400).json({ success: false, message: "OTP is required to complete delivery" });
-      }
-      if (order.otp !== otp.toString().trim()) {
-        return res.status(400).json({ success: false, message: "Invalid delivery OTP. Please check with customer." });
-      }
+    if (status === "PAYMENT_RECEIVED") {
       order.paymentStatus = "PAID";
     }
 
-    // Stock replenishment if order cancelled
-    if (status === "CANCELLED" && order.status !== "CANCELLED") {
-      for (const item of order.items) {
-        await inventoryModel.updateOne(
-          { store: order.store, product: item.product },
-          { $inc: { stock: item.quantity } }
-        );
-      }
+    if (status === "CANCELLED") {
       order.paymentStatus = "REFUNDED";
     }
 
@@ -238,7 +215,7 @@ export const updateOrderStatus = async (req, res) => {
     const updatedOrder = await orderModel.findById(order._id)
       .populate("store")
       .populate("items.product")
-      .populate("customer", "fullname username email address")
+      .populate("customer", "fullname username email address phone")
       .populate("rider", "fullname username role");
 
     return res.status(200).json({
@@ -256,12 +233,9 @@ export const updateOrderStatus = async (req, res) => {
 
 export const getAvailableDeliveries = async (req, res) => {
   try {
-    // Available deliveries are those in 'PACKED' or 'ASSIGNED' (to me) status
+    // Retrofitted to return orders ready for delivery in Vendor scope
     const orders = await orderModel.find({
-      $or: [
-        { status: "PACKED", rider: { $exists: false } },
-        { rider: req.user._id }
-      ]
+      status: { $in: ["READY_FOR_DELIVERY", "PACKED"] }
     })
       .populate("store")
       .populate("items.product")
@@ -283,45 +257,24 @@ export const getAvailableDeliveries = async (req, res) => {
 export const acceptOrAssignRider = async (req, res) => {
   try {
     const { id } = req.params;
-    const { riderId } = req.body; // Can be assigned by admin, or accepted by current rider
-
-    const finalRiderId = riderId || req.user._id;
-
-    const rider = await userModel.findById(finalRiderId);
-    if (!rider || rider.role !== "rider") {
-      return res.status(400).json({
-        success: false,
-        message: "Valid rider details are required"
-      });
-    }
-
     const order = await orderModel.findById(id);
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    if (order.status === "CANCELLED" || order.status === "DELIVERED") {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot assign rider to completed or cancelled order"
-      });
-    }
-
-    order.rider = finalRiderId;
-    order.status = "ASSIGNED";
-    order.timeline.push({ status: "ASSIGNED", timestamp: new Date() });
+    order.status = "ACCEPTED";
+    order.timeline.push({ status: "ACCEPTED", timestamp: new Date() });
     await order.save();
 
     const updatedOrder = await orderModel.findById(id)
       .populate("store")
       .populate("items.product")
-      .populate("customer", "fullname username email address")
-      .populate("rider", "fullname username role");
+      .populate("customer", "fullname username email address");
 
     return res.status(200).json({
       success: true,
       data: updatedOrder,
-      message: "Rider successfully assigned to order"
+      message: "Order accepted successfully"
     });
   } catch (error) {
     return res.status(500).json({

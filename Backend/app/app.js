@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRouter from './routes/auth.routes.js';
 import catalogRouter from './routes/catalog.routes.js';
 import orderRouter from './routes/order.routes.js';
+import adminRouter from './routes/admin.routes.js';
 
 const app = express();
 
@@ -15,13 +16,14 @@ app.use(cors());
 app.use("/api/auth", authRouter);
 app.use("/api/catalog", catalogRouter);
 app.use("/api/orders", orderRouter);
+app.use("/api/admin", adminRouter);
 
 // health check
 app.get("/health", (req, res) => {
   res.status(200).json({ success: true, message: "Server is healthy" });
 });
 
-// global error handler (Express 5 compatible — no next param needed)
+// global error handler
 app.use((err, req, res, _next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({

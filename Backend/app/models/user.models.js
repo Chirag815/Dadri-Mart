@@ -13,11 +13,11 @@ const userSchema = new Schema(
     },
     username: {
       type: String,
-      required: [true, "Username is required"],
       lowercase: true,
       trim: true,
       index: true,
       unique: true,
+      sparse: true
     },
     email: {
       type: String,
@@ -29,12 +29,29 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       trim: true,
     },
     fullname: {
       type: String,
       trim: true,
+    },
+    phone: {
+      type: String,
+      required: [true, "Phone number is required"],
+      unique: true,
+      index: true,
+      trim: true
+    },
+    pincode: {
+      type: String,
+      required: [true, "Pincode is required"],
+      trim: true
+    },
+    otp: {
+      type: String
+    },
+    otpExpiry: {
+      type: Date
     },
     isEmailverified: {
       type: Boolean,
@@ -57,7 +74,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["user", "rider", "admin"],
+      enum: ["user", "vendor", "admin"], // user=Customer, vendor=Store Vendor, admin=System Superuser
       default: "user",
     },
     address: {
@@ -75,13 +92,14 @@ const userSchema = new Schema(
 
 // pre hooks — Mongoose 9: async pre hooks return a promise; do not call next()
 userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+  if (!this.password || !this.isModified("password")) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
 // instance methods
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -90,7 +108,7 @@ userSchema.methods.generateAccessToken = function () {
     {
       _id: this._id,
       email: this.email,
-      username: this.username,
+      username: this.username || this.phone,
       role: this.role,
     },
     process.env.ACCESS_TOKEN_SECRET,

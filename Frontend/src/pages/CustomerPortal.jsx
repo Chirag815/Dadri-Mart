@@ -3,13 +3,30 @@ import { AppContext } from "../context/AppContext";
 import AddressManagementPage from "./AddressManagementPage";
 import OrderHistoryPage from "./OrderHistoryPage";
 import LiveOrderTracker from "../components/LiveOrderTracker";
-import { Sparkles, Search, Minus, Plus } from "lucide-react";
+import { Sparkles, Search, Minus, Plus, MapPin, AlertCircle, ShoppingBag } from "lucide-react";
 
 export default function CustomerPortal() {
-  const { products, addToCart, cart, activeOrder, nearestStore, orders } = useContext(AppContext);
+  const { 
+    products, 
+    activeOrder, 
+    nearestStore, 
+    orders, 
+    pincodeVerified, 
+    customerPincode, 
+    checkPincode, 
+    resetPincode,
+    storeTimings,
+    isStoreOpen,
+    cart
+  } = useContext(AppContext);
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [customerTab, setCustomerTab] = useState("shop"); // shop | orders | address
+  
+  // Pincode check local states
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
 
   const categories = ["all", "vegetables", "dairy", "bakery", "beverages", "snacks", "household"];
 
@@ -20,33 +37,100 @@ export default function CustomerPortal() {
     return matchesCategory && matchesSearch;
   });
 
-  const removeFromCart = (productId) => {
-    const { removeFromCart: contextRemove } = useContext(AppContext);
-    contextRemove(productId);
+  const handlePincodeSubmit = async (e) => {
+    e.preventDefault();
+    setPinError("");
+    if (!pinInput || pinInput.length < 6) {
+      setPinError("Please enter a valid 6-digit pincode.");
+      return;
+    }
+
+    const res = await checkPincode(pinInput);
+    if (res.success) {
+      if (!res.available) {
+        setPinError("Currently we do not deliver to your area.");
+      }
+    } else {
+      setPinError("Failed to check service availability.");
+    }
   };
+
+  // If pincode is not verified, render the Pincode Availability Gating Modal
+  if (!pincodeVerified) {
+    return (
+      <div className="max-w-md w-full mx-auto my-16 glass-panel p-6 md:p-8 rounded-3xl border border-emerald-500/20 shadow-2xl relative overflow-hidden bg-gradient-radial flex flex-col items-center text-center space-y-6">
+        <div className="bg-emerald-500/10 p-4 rounded-full border border-emerald-500/30">
+          <MapPin className="w-12 h-12 text-emerald-400 animate-bounce" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-white tracking-tight">Check Delivery Service</h2>
+          <p className="text-xs text-gray-500 mt-2">Enter your local pincode to check service availability in your area.</p>
+        </div>
+
+        {pinError && (
+          <div className="w-full bg-red-500/10 border border-red-500/20 text-red-400 p-3.5 rounded-2xl flex items-center justify-center gap-2 text-xs font-semibold animate-slide-in">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{pinError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handlePincodeSubmit} className="w-full space-y-4">
+          <input
+            type="text"
+            maxLength="6"
+            required
+            value={pinInput}
+            onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ""))}
+            className="w-full glass-input px-4 py-3 rounded-xl text-center text-lg font-black tracking-widest text-white"
+            placeholder="000000"
+          />
+          <button
+            type="submit"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black py-3.5 rounded-xl text-sm uppercase tracking-wider cursor-pointer"
+          >
+            Check Service
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-slide-in">
 
       {/* Customer Tab Navigation */}
-      <div className="flex gap-2 bg-gray-900/60 p-1 rounded-xl border border-gray-800 w-fit">
-        {[
-          { key: "shop", label: "🛒 Shop" },
-          { key: "orders", label: "📦 My Orders" },
-          { key: "address", label: "📍 Address" },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setCustomerTab(t.key)}
-            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
-              customerTab === t.key
-                ? "bg-emerald-500 text-gray-950 shadow-sm"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex gap-2 bg-gray-900/60 p-1 rounded-xl border border-gray-800 w-fit">
+          {[
+            { key: "shop", label: "🛒 Shop" },
+            { key: "orders", label: "📦 My Orders" },
+            { key: "address", label: "📍 Address" },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setCustomerTab(t.key)}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
+                customerTab === t.key
+                  ? "bg-emerald-500 text-gray-950 shadow-sm"
+                  : "text-gray-400 hover:text-gray-200"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Display Verified Pincode */}
+        <div className="flex items-center gap-2 bg-gray-900/60 border border-gray-800 rounded-full px-4 py-2 text-xs text-gray-300">
+          <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Service Pincode: <strong>{customerPincode}</strong></span>
+          <button 
+            onClick={resetPincode} 
+            className="text-red-400 hover:text-red-300 font-bold ml-1.5 cursor-pointer uppercase text-[9px]"
           >
-            {t.label}
+            Change
           </button>
-        ))}
+        </div>
       </div>
 
       {/* Address Management Tab */}
@@ -58,6 +142,21 @@ export default function CustomerPortal() {
       {/* Shopping Tab */}
       {customerTab === "shop" && (
         <div className="space-y-8">
+          
+          {/* Store Closed Warning Banner */}
+          {!isStoreOpen && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-start gap-3 text-xs leading-relaxed animate-slide-in">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-extrabold uppercase tracking-wide">Store is Currently Closed</h4>
+                <p className="mt-1">
+                  We are closed right now. Operating hours are from <strong>{storeTimings.storeOpenTime}</strong> to <strong>{storeTimings.storeCloseTime}</strong>. 
+                  You can still browse and add items to your cart, but checkout is disabled.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Banner / Store info */}
           <div className="glass-panel p-6 rounded-3xl border border-gray-800 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-gradient-violet-radial">
             <div className="space-y-2">
@@ -69,16 +168,9 @@ export default function CustomerPortal() {
                 Order Groceries in <span className="text-gradient-emerald">10 Minutes</span>
               </h2>
               <p className="text-xs md:text-sm text-gray-400">
-                Selected sourcing dark store: <span className="text-emerald-400 font-bold">{nearestStore?.name || "Locating Nearest..."}</span>
+                Fulfilling grocery orders for area pincode: <span className="text-emerald-400 font-bold">{customerPincode}</span>
               </p>
             </div>
-            {nearestStore && (
-              <div className="bg-gray-900/60 p-4 rounded-2xl border border-gray-800 text-left md:max-w-xs w-full">
-                <h4 className="font-bold text-white text-xs uppercase tracking-widest text-gray-500 mb-1">Dark Store Hub</h4>
-                <p className="text-sm font-extrabold text-white truncate">{nearestStore.name}</p>
-                <p className="text-[11px] text-gray-400 mt-1 max-w-[220px] line-clamp-2 leading-relaxed">{nearestStore.address}</p>
-              </div>
-            )}
           </div>
 
           {/* Live Order Tracker Section (Appears at top if active order exists) */}
@@ -127,10 +219,8 @@ export default function CustomerPortal() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {filteredProducts.map((p) => {
               const cartItem = cart.find(item => item.product._id === p._id);
-              const isOutOfStock = p.stock <= 0;
-
               return (
-                <ProductCard key={p._id} p={p} cartItem={cartItem} isOutOfStock={isOutOfStock} />
+                <ProductCard key={p._id} p={p} cartItem={cartItem} />
               );
             })}
           </div>
@@ -140,7 +230,7 @@ export default function CustomerPortal() {
   );
 }
 
-function ProductCard({ p, cartItem, isOutOfStock }) {
+function ProductCard({ p, cartItem }) {
   const { addToCart, removeFromCart } = useContext(AppContext);
 
   return (
@@ -154,20 +244,6 @@ function ProductCard({ p, cartItem, isOutOfStock }) {
         <span className="absolute top-2 left-2 text-[9px] uppercase font-bold tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
           {p.category}
         </span>
-        
-        {p.stock <= 5 && p.stock > 0 && (
-          <span className="absolute top-2 right-2 text-[9px] uppercase font-bold tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
-            Only {p.stock} left
-          </span>
-        )}
-
-        {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
-            <span className="text-red-400 border border-red-500/40 bg-red-500/15 font-black text-xs uppercase px-3 py-1.5 rounded-lg tracking-wider">
-              Out of Stock
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Product Info */}
@@ -197,7 +273,6 @@ function ProductCard({ p, cartItem, isOutOfStock }) {
               <button
                 onClick={() => addToCart(p)}
                 className="text-emerald-400 hover:text-emerald-300 font-bold p-0.5 shrink-0 cursor-pointer"
-                disabled={cartItem.quantity >= p.stock}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -205,7 +280,6 @@ function ProductCard({ p, cartItem, isOutOfStock }) {
           ) : (
             <button
               onClick={() => addToCart(p)}
-              disabled={isOutOfStock}
               className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-800 disabled:text-gray-600 text-gray-950 font-black text-[11px] uppercase tracking-wider px-3.5 py-1.5 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
             >
               Add

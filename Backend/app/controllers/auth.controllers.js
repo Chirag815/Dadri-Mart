@@ -12,29 +12,29 @@ const generateAccessAndRefereshTokens = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new Error("Something went wrong while generating referesh and access token");
+    throw new Error("Something went wrong while generating refresh and access token");
   }
 };
 
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password, fullname, role, addressText, coordinates } = req.body;
+    const { email, fullname, phone, addressText, coordinates, pincode, role } = req.body;
 
-    if (!username || !email || !password) {
+    if (!email || !fullname || !phone || !pincode) {
       return res.status(400).json({
         success: false,
-        message: "Username, email, and password are required"
+        message: "Email, Full Name, Phone, and Pincode are required"
       });
     }
 
     const existedUser = await userModel.findOne({
-      $or: [{ username: username.toLowerCase() }, { email: email.toLowerCase() }]
+      $or: [{ phone: phone.trim() }, { email: email.toLowerCase().trim() }]
     });
 
     if (existedUser) {
       return res.status(409).json({
         success: false,
-        message: "User with email or username already exists"
+        message: "User with this email or phone number already exists"
       });
     }
 
@@ -43,28 +43,25 @@ export const registerUser = async (req, res) => {
       coordinates: coordinates || [77.2090, 28.6139] // default Delhi coords
     };
 
+    // Auto-generate a unique sparse username
+    const username = `u_${phone}_${Math.floor(100 + Math.random() * 900)}`;
+
     const user = await userModel.create({
       fullname,
-      email: email.toLowerCase(),
-      password,
-      username: username.toLowerCase(),
+      email: email.toLowerCase().trim(),
+      phone: phone.trim(),
+      pincode: pincode.trim(),
       role: role || "user",
-      address: userAddress
+      address: userAddress,
+      username
     });
 
     const createdUser = await userModel.findById(user._id).select("-password -refreshToken");
 
-    if (!createdUser) {
-      return res.status(500).json({
-        success: false,
-        message: "Something went wrong while registering the user"
-      });
-    }
-
     return res.status(201).json({
       success: true,
       data: createdUser,
-      message: "User registered successfully"
+      message: "User registered successfully! Please request an OTP to log in."
     });
   } catch (error) {
     return res.status(500).json({
@@ -74,42 +71,69 @@ export const registerUser = async (req, res) => {
   }
 };
 
-export const loginUser = async (req, res) => {
+export const requestOTP = async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { phone } = req.body;
 
-    if (!email && !username) {
-      return res.status(400).json({
-        success: false,
-        message: "Email or username is required"
-      });
+    if (!phone) {
+      return res.status(400).json({ success: false, message: "Phone number is required" });
     }
 
-    const user = await userModel.findOne({
-      $or: [
-        { email: email ? email.toLowerCase() : undefined },
-        { username: username ? username.toLowerCase() : undefined }
-      ].filter(Boolean)
-    });
-
+    const user = await userModel.findOne({ phone: phone.trim() });
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User does not exist"
+        message: "Phone number not registered. Please sign up first."
       });
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    // Development/Demo OTP generation
+    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // e.g. random 4-digit code
+    user.otp = otp;
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 mins expiry
+    await user.save({ validateBeforeSave: false });
 
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid user credentials"
-      });
+    // In demo/dev mode we return the OTP directly in response for ease of testing
+    return res.status(200).json({
+      success: true,
+      otp, // returning to client for demo/simulation autocomplete
+      message: `OTP sent successfully to ${phone} (Demo OTP: ${otp})`
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Server Error"
+    });
+  }
+};
+
+export const verifyOTP = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ success: false, message: "Phone and OTP are required" });
     }
+
+    const user = await userModel.findOne({ phone: phone.trim() });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (!user.otp || user.otp !== otp.toString().trim()) {
+      return res.status(401).json({ success: false, message: "Invalid OTP code" });
+    }
+
+    if (user.otpExpiry && new Date() > user.otpExpiry) {
+      return res.status(401).json({ success: false, message: "OTP has expired. Please request a new one." });
+    }
+
+    // Clear OTP
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
 
     const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id);
-
     const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken");
 
     return res.status(200).json({
@@ -129,13 +153,18 @@ export const loginUser = async (req, res) => {
   }
 };
 
+export const loginUser = async (req, res) => {
+  // Aliased to verifyOTP to keep backward compatibility if any callers hit /login
+  return verifyOTP(req, res);
+};
+
 export const logoutUser = async (req, res) => {
   try {
     await userModel.findByIdAndUpdate(
       req.user._id,
       {
         $unset: {
-          refreshToken: 1 // removes the field from document
+          refreshToken: 1
         }
       },
       {
@@ -208,7 +237,7 @@ export const getCurrentUser = async (req, res) => {
 
 export const updateUserAddress = async (req, res) => {
   try {
-    const { addressText, coordinates } = req.body;
+    const { addressText, coordinates, pincode } = req.body;
 
     if (!addressText || !coordinates || coordinates.length !== 2) {
       return res.status(400).json({
@@ -217,15 +246,21 @@ export const updateUserAddress = async (req, res) => {
       });
     }
 
+    const updateFields = {
+      address: {
+        text: addressText,
+        coordinates: coordinates
+      }
+    };
+
+    if (pincode) {
+      updateFields.pincode = pincode.trim();
+    }
+
     const user = await userModel.findByIdAndUpdate(
       req.user._id,
       {
-        $set: {
-          address: {
-            text: addressText,
-            coordinates: coordinates // [longitude, latitude]
-          }
-        }
+        $set: updateFields
       },
       { new: true }
     ).select("-password -refreshToken");
@@ -262,4 +297,3 @@ export const getAllUsers = async (req, res) => {
     });
   }
 };
-

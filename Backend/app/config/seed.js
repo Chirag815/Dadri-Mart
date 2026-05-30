@@ -1,24 +1,46 @@
 import storeModel from "../models/store.models.js";
 import productModel from "../models/product.models.js";
 import inventoryModel from "../models/inventory.models.js";
+import pincodeModel from "../models/pincode.models.js";
+import settingsModel from "../models/settings.models.js";
+import userModel from "../models/user.models.js";
+
+// Demo users for development/testing
+const demoUsers = [
+  {
+    fullname: "Store Admin",
+    email: "admin@kartly.io",
+    phone: "9000000001",
+    pincode: "110001",
+    role: "admin",
+    username: "u_admin_kartly",
+    address: { text: "Radial Road 3, Connaught Place, New Delhi", coordinates: [77.2197, 28.6304] }
+  },
+  {
+    fullname: "Store Vendor",
+    email: "vendor@kartly.io",
+    phone: "9000000002",
+    pincode: "110001",
+    role: "vendor",
+    username: "u_vendor_kartly",
+    address: { text: "Radial Road 3, Connaught Place, New Delhi", coordinates: [77.2197, 28.6304] }
+  },
+  {
+    fullname: "Demo Customer",
+    email: "customer@kartly.io",
+    phone: "9000000003",
+    pincode: "110001",
+    role: "user",
+    username: "u_customer_demo",
+    address: { text: "Kartavya Path, New Delhi, DL 110001", coordinates: [77.2295, 28.6129] }
+  }
+];
 
 const storesData = [
   {
     name: "Connaught Place Dark Store",
     address: "Radial Road 3, Connaught Place, New Delhi",
     location: { type: "Point", coordinates: [77.2197, 28.6304] }, // CP Delhi
-    isActive: true
-  },
-  {
-    name: "Saket Hyperlocal Warehouse",
-    address: "Block M, Saket, New Delhi",
-    location: { type: "Point", coordinates: [77.2089, 28.5244] }, // Saket Delhi
-    isActive: true
-  },
-  {
-    name: "Karol Bagh Fulfillment Hub",
-    address: "Pusa Road, Karol Bagh, New Delhi",
-    location: { type: "Point", coordinates: [77.1888, 28.6444] }, // Karol Bagh Delhi
     isActive: true
   }
 ];
@@ -65,7 +87,7 @@ const productsData = [
   // Dairy
   {
     name: "Amul Gold Milk (500ml)",
-    description: "Pasteurized pasteurized full cream milk, creamy and rich.",
+    description: "Pasteurized full cream milk, creamy and rich.",
     price: 33,
     mrp: 35,
     image: "https://placehold.co/400x400/F4F6F9/333333?text=Amul+Milk",
@@ -168,20 +190,28 @@ const productsData = [
   }
 ];
 
+const pincodesData = [
+  { code: "110001" },
+  { code: "110017" },
+  { code: "110008" }
+];
+
 export async function seedDatabase() {
   try {
-    const existingStoresCount = await storeModel.countDocuments();
-    if (existingStoresCount > 0) {
-      console.log("Database already seeded with stores. Skipping seeder.");
+    const existingSettingsCount = await settingsModel.countDocuments();
+    if (existingSettingsCount > 0) {
+      console.log("Database already seeded with settings. Skipping seeder.");
       return;
     }
 
     console.log("Seeding Database...");
 
-    // Clear existing data just in case
+    // Clear existing data
     await storeModel.deleteMany({});
     await productModel.deleteMany({});
     await inventoryModel.deleteMany({});
+    await pincodeModel.deleteMany({});
+    await settingsModel.deleteMany({});
 
     // Seed Stores
     const seededStores = await storeModel.insertMany(storesData);
@@ -191,25 +221,45 @@ export async function seedDatabase() {
     const seededProducts = await productModel.insertMany(productsData);
     console.log(`Successfully seeded ${seededProducts.length} Catalog Products.`);
 
-    // Seed Inventories (Create stocks for each product in each store with random stock counts)
+    // Seed Inventories (unlimited stock counts seeded as placeholder)
     const inventoriesToInsert = [];
     for (const store of seededStores) {
       for (const product of seededProducts) {
-        // Random stock level between 10 and 60
-        const stockCount = Math.floor(Math.random() * 51) + 10;
         inventoriesToInsert.push({
           product: product._id,
           store: store._id,
-          stock: stockCount,
-          safetyStock: 3
+          stock: 9999, // unlimited stock context
+          safetyStock: 0
         });
       }
     }
-
     await inventoryModel.insertMany(inventoriesToInsert);
-    console.log(`Successfully seeded inventories for all stores.`);
+    console.log(`Successfully seeded inventories.`);
+
+    // Seed Pincodes
+    await pincodeModel.insertMany(pincodesData);
+    console.log(`Successfully seeded default allowed pincodes.`);
+
+    // Seed Timings Settings
+    await settingsModel.create({
+      storeOpenTime: "08:00",
+      storeCloseTime: "22:00"
+    });
+    console.log(`Successfully seeded default store open/close timings settings.`);
+
+    // Seed Demo Users (skip if any already exist to avoid duplicate errors)
+    const existingUserCount = await userModel.countDocuments();
+    if (existingUserCount === 0) {
+      await userModel.insertMany(demoUsers);
+      console.log(`Successfully seeded ${demoUsers.length} demo users.`);
+      console.log("  → Admin  phone: 9000000001  (use OTP login at /admin-login)");
+      console.log("  → Vendor phone: 9000000002  (select Vendor on login screen)");
+      console.log("  → Customer phone: 9000000003 (select Customer on login screen)");
+    }
+
     console.log("Database seeding completed!");
   } catch (error) {
     console.error("Error seeding database: ", error);
   }
 }
+

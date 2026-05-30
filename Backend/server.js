@@ -6,7 +6,7 @@ import { seedDatabase } from './app/config/seed.js';
 
 const server = http.createServer(app);
 
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 4001;
 
 await connectDB();
 await seedDatabase();

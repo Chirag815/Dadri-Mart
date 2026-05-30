@@ -1,35 +1,33 @@
 import React, { createContext, useState, useEffect } from "react";
 import api from "../lib/api";
 
-// Fallback Mock Data for Simulation Mode
+// Fallback Mock Data for Simulation Mode (Unlimited Stock Context)
 export const MOCK_PRODUCTS = [
-  { _id: "p1", name: "Fresh Tomatoes (500g)", description: "Farm-fresh organic red tomatoes, handpicked for quality.", price: 32, mrp: 45, image: "https://placehold.co/400x400/FF6B6B/FFFFFF?text=Tomatoes", sku: "VEG-TOMATO-500", category: "vegetables", stock: 25 },
-  { _id: "p2", name: "Organic Onions (1kg)", description: "Crispy and flavorful organic onions, kitchen staple.", price: 40, mrp: 60, image: "https://placehold.co/400x400/D0BFFF/333333?text=Onions", sku: "VEG-ONION-1000", category: "vegetables", stock: 18 },
-  { _id: "p3", name: "Fresh Potatoes (1kg)", description: "Nutritious and clean potatoes, direct from local farms.", price: 30, mrp: 38, image: "https://placehold.co/400x400/EAD8B1/333333?text=Potatoes", sku: "VEG-POTATO-1000", category: "vegetables", stock: 35 },
-  { _id: "p4", name: "Organic Bananas (Pack of 6)", description: "Ripe, sweet, and rich in potassium. Packed hygienically.", price: 55, mrp: 70, image: "https://placehold.co/400x400/FFF3B0/333333?text=Bananas", sku: "FRU-BANANA-6", category: "vegetables", stock: 12 },
-  { _id: "p5", name: "Amul Gold Milk (500ml)", description: "Pasteurized pasteurized full cream milk, creamy and rich.", price: 33, mrp: 35, image: "https://placehold.co/400x400/F4F6F9/333333?text=Amul+Milk", sku: "DAI-MILK-500", category: "dairy", stock: 40 },
-  { _id: "p6", name: "Amul Butter Salted (100g)", description: "The classic salted butter from Amul. Utterly butterly delicious.", price: 56, mrp: 58, image: "https://placehold.co/400x400/FFE082/333333?text=Amul+Butter", sku: "DAI-BUTTER-100", category: "dairy", stock: 15 },
-  { _id: "p7", name: "Fresh Paneer (200g)", description: "Soft, fresh, and high-protein cottage cheese.", price: 90, mrp: 110, image: "https://placehold.co/400x400/ECEFF1/333333?text=Paneer", sku: "DAI-PANEER-200", category: "dairy", stock: 22 },
-  { _id: "p8", name: "Whole Wheat Bread (400g)", description: "Soft, healthy, sliced whole wheat sandwich bread.", price: 45, mrp: 50, image: "https://placehold.co/400x400/D7CCC8/333333?text=Wheat+Bread", sku: "BAK-WHEAT-BREAD", category: "bakery", stock: 8 },
-  { _id: "p9", name: "Chocolate Chip Cookies (150g)", description: "Crispy cookies loaded with premium dark chocolate chips.", price: 80, mrp: 100, image: "https://placehold.co/400x400/8D6E63/FFFFFF?text=Cookies", sku: "BAK-COOKIE-CHOC", category: "bakery", stock: 14 },
-  { _id: "p10", name: "Coca Cola Zero Sugar (250ml)", description: "Great Coke taste with zero sugar and zero calories.", price: 40, mrp: 40, image: "https://placehold.co/400x400/212121/FFFFFF?text=Coke+Zero", sku: "BEV-COKE-ZERO", category: "beverages", stock: 30 },
-  { _id: "p11", name: "Organic Green Tea (25 Bags)", description: "Rich in antioxidants. Refreshing green tea for overall wellness.", price: 135, mrp: 160, image: "https://placehold.co/400x400/C8E6C9/333333?text=Green+Tea", sku: "BEV-GREEN-TEA", category: "beverages", stock: 20 },
-  { _id: "p12", name: "Potato Chips Classic Salted (50g)", description: "Crunchy, thin, and lightly salted potato chips.", price: 20, mrp: 20, image: "https://placehold.co/400x400/FFF9C4/333333?text=Potato+Chips", sku: "SNA-CHIPS-SALTED", category: "snacks", stock: 50 },
-  { _id: "p13", name: "Roasted Almonds (100g)", description: "Salted and dry-roasted premium California almonds.", price: 150, mrp: 180, image: "https://placehold.co/400x400/D7CCC8/333333?text=Almonds", sku: "SNA-ALMOND-ROAST", category: "snacks", stock: 16 },
-  { _id: "p14", name: "Vim Dishwash Gel Lemon (250ml)", description: "Super effective lemon dishwashing liquid gel.", price: 55, mrp: 60, image: "https://placehold.co/400x400/FFF59D/333333?text=Vim+Gel", sku: "HOU-VIM-LEMON", category: "household", stock: 32 },
-  { _id: "p15", name: "Surf Excel Laundry Liquid (1L)", description: "Tough stain removal in machines with a pleasant scent.", price: 220, mrp: 260, image: "https://placehold.co/400x400/BBDEFB/333333?text=Surf+Excel", sku: "HOU-SURF-LAUNDRY", category: "household", stock: 10 }
+  { _id: "p1", name: "Fresh Tomatoes (500g)", description: "Farm-fresh organic red tomatoes, handpicked for quality.", price: 32, mrp: 45, image: "https://placehold.co/400x400/FF6B6B/FFFFFF?text=Tomatoes", sku: "VEG-TOMATO-500", category: "vegetables", stock: 9999 },
+  { _id: "p2", name: "Organic Onions (1kg)", description: "Crispy and flavorful organic onions, kitchen staple.", price: 40, mrp: 60, image: "https://placehold.co/400x400/D0BFFF/333333?text=Onions", sku: "VEG-ONION-1000", category: "vegetables", stock: 9999 },
+  { _id: "p3", name: "Fresh Potatoes (1kg)", description: "Nutritious and clean potatoes, direct from local farms.", price: 30, mrp: 38, image: "https://placehold.co/400x400/EAD8B1/333333?text=Potatoes", sku: "VEG-POTATO-1000", category: "vegetables", stock: 9999 },
+  { _id: "p4", name: "Organic Bananas (Pack of 6)", description: "Ripe, sweet, and rich in potassium. Packed hygienically.", price: 55, mrp: 70, image: "https://placehold.co/400x400/FFF3B0/333333?text=Bananas", sku: "FRU-BANANA-6", category: "vegetables", stock: 9999 },
+  { _id: "p5", name: "Amul Gold Milk (500ml)", description: "Pasteurized full cream milk, creamy and rich.", price: 33, mrp: 35, image: "https://placehold.co/400x400/F4F6F9/333333?text=Amul+Milk", sku: "DAI-MILK-500", category: "dairy", stock: 9999 },
+  { _id: "p6", name: "Amul Butter Salted (100g)", description: "The classic salted butter from Amul. Utterly butterly delicious.", price: 56, mrp: 58, image: "https://placehold.co/400x400/FFE082/333333?text=Amul+Butter", sku: "DAI-BUTTER-100", category: "dairy", stock: 9999 },
+  { _id: "p7", name: "Fresh Paneer (200g)", description: "Soft, fresh, and high-protein cottage cheese.", price: 90, mrp: 110, image: "https://placehold.co/400x400/ECEFF1/333333?text=Paneer", sku: "DAI-PANEER-200", category: "dairy", stock: 9999 },
+  { _id: "p8", name: "Whole Wheat Bread (400g)", description: "Soft, healthy, sliced whole wheat sandwich bread.", price: 45, mrp: 50, image: "https://placehold.co/400x400/D7CCC8/333333?text=Wheat+Bread", sku: "BAK-WHEAT-BREAD", category: "bakery", stock: 9999 },
+  { _id: "p9", name: "Chocolate Chip Cookies (150g)", description: "Crispy cookies loaded with premium dark chocolate chips.", price: 80, mrp: 100, image: "https://placehold.co/400x400/8D6E63/FFFFFF?text=Cookies", sku: "BAK-COOKIE-CHOC", category: "bakery", stock: 9999 },
+  { _id: "p10", name: "Coca Cola Zero Sugar (250ml)", description: "Great Coke taste with zero sugar and zero calories.", price: 40, mrp: 40, image: "https://placehold.co/400x400/212121/FFFFFF?text=Coke+Zero", sku: "BEV-COKE-ZERO", category: "beverages", stock: 9999 },
+  { _id: "p11", name: "Organic Green Tea (25 Bags)", description: "Rich in antioxidants. Refreshing green tea for overall wellness.", price: 135, mrp: 160, image: "https://placehold.co/400x400/C8E6C9/333333?text=Green+Tea", sku: "BEV-GREEN-TEA", category: "beverages", stock: 9999 },
+  { _id: "p12", name: "Potato Chips Classic Salted (50g)", description: "Crunchy, thin, and lightly salted potato chips.", price: 20, mrp: 20, image: "https://placehold.co/400x400/FFF9C4/333333?text=Potato+Chips", sku: "SNA-CHIPS-SALTED", category: "snacks", stock: 9999 },
+  { _id: "p13", name: "Roasted Almonds (100g)", description: "Salted and dry-roasted premium California almonds.", price: 150, mrp: 180, image: "https://placehold.co/400x400/D7CCC8/333333?text=Almonds", sku: "SNA-ALMOND-ROAST", category: "snacks", stock: 9999 },
+  { _id: "p14", name: "Vim Dishwash Gel Lemon (250ml)", description: "Super effective lemon dishwashing liquid gel.", price: 55, mrp: 60, image: "https://placehold.co/400x400/FFF59D/333333?text=Vim+Gel", sku: "HOU-VIM-LEMON", category: "household", stock: 9999 },
+  { _id: "p15", name: "Surf Excel Laundry Liquid (1L)", description: "Tough stain removal in machines with a pleasant scent.", price: 220, mrp: 260, image: "https://placehold.co/400x400/BBDEFB/333333?text=Surf+Excel", sku: "HOU-SURF-LAUNDRY", category: "household", stock: 9999 }
 ];
 
 export const MOCK_STORES = [
-  { _id: "s1", name: "Connaught Place Dark Store", address: "Radial Road 3, Connaught Place, New Delhi", location: { coordinates: [77.2197, 28.6304] } },
-  { _id: "s2", name: "Saket Hyperlocal Warehouse", address: "Block M, Saket, New Delhi", location: { coordinates: [77.2089, 28.5244] } },
-  { _id: "s3", name: "Karol Bagh Fulfillment Hub", address: "Pusa Road, Karol Bagh, New Delhi", location: { coordinates: [77.1888, 28.6444] } }
+  { _id: "s1", name: "Main Hyperlocal Dark Store", address: "Radial Road 3, Connaught Place, New Delhi", location: { coordinates: [77.2197, 28.6304] } }
 ];
 
 export const ADDR_OPTIONS = [
-  { label: "India Gate (Central Delhi)", text: "Kartavya Path, New Delhi, DL 110001", coords: [77.2295, 28.6129] },
-  { label: "Saket City Mall (South Delhi)", text: "Press Enclave Marg, Saket, DL 110017", coords: [77.2185, 28.5286] },
-  { label: "Rajendra Place (West Delhi)", text: "Pusa Road, Karol Bagh, DL 110008", coords: [77.1798, 28.6425] }
+  { label: "India Gate (Pincode: 110001)", text: "Kartavya Path, New Delhi, DL 110001", coords: [77.2295, 28.6129], pincode: "110001" },
+  { label: "Saket City Mall (Pincode: 110017)", text: "Press Enclave Marg, Saket, DL 110017", coords: [77.2185, 28.5286], pincode: "110017" },
+  { label: "Rajendra Place (Pincode: 110008)", text: "Pusa Road, Karol Bagh, DL 110008", coords: [77.1798, 28.6425], pincode: "110008" }
 ];
 
 export const AppContext = createContext();
@@ -40,129 +38,163 @@ export function AppProvider({ children }) {
   const [role, setRole] = useState("user"); // user, admin, rider
   const [token, setToken] = useState(localStorage.getItem("accessToken") || null);
   const [selectedAddress, setSelectedAddress] = useState(ADDR_OPTIONS[0]);
-  const [nearestStore, setNearestStore] = useState(null);
+  const [nearestStore, setNearestStore] = useState(MOCK_STORES[0]);
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [activeOrder, setActiveOrder] = useState(null);
-  const [stores, setStores] = useState(MOCK_STORES);
+  const [loading, setLoading] = useState(true);
   
+  // Hyperlocal specific states
+  const [pincodeVerified, setPincodeVerified] = useState(localStorage.getItem("pincodeVerified") === "true");
+  const [customerPincode, setCustomerPincode] = useState(localStorage.getItem("customerPincode") || "");
+  const [storeTimings, setStoreTimings] = useState({ storeOpenTime: "08:00", storeCloseTime: "22:00" });
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
+
   // Simulator Flags
   const [offlineMode, setOfflineMode] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(1); // multiplier
   const [gpsProgress, setGpsProgress] = useState(0); // 0 to 100%
   const [isGpsSimulating, setIsGpsSimulating] = useState(false);
 
-  // Load User details on mount
+  // Load User details and store timings on mount
+   useEffect(() => {
+     const init = async () => {
+       if (token) {
+         await fetchProfile();
+       }
+       await fetchStoreTimings();
+       setLoading(false);
+     };
+     init();
+   }, [token]);
+
+  // Check store timings every 30 seconds
   useEffect(() => {
-    if (token) {
-      fetchProfile();
+    evaluateStoreOpen();
+    const interval = setInterval(evaluateStoreOpen, 30000);
+    return () => clearInterval(interval);
+  }, [storeTimings]);
+
+   const fetchStoreTimings = async () => {
+     if (offlineMode) return;
+     try {
+       const response = await api.get("/admin/settings");
+       if (response.data.success) {
+         setStoreTimings(response.data.data);
+       }
+     } catch (error) {
+       console.warn("Failed to fetch store settings. Using default hours.");
+     }
+   };
+
+  const evaluateStoreOpen = () => {
+    const { storeOpenTime, storeCloseTime } = storeTimings;
+    const now = new Date();
+    const currentTimeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+    
+    if (currentTimeStr >= storeOpenTime && currentTimeStr <= storeCloseTime) {
+      setIsStoreOpen(true);
     } else {
-      // Demo defaults
-      setNearestStore(MOCK_STORES[0]);
+      setIsStoreOpen(false);
     }
-  }, [token]);
+  };
 
-  // Handle address change to find nearest store
-  useEffect(() => {
-    findNearestStore(selectedAddress.coords[0], selectedAddress.coords[1]);
-  }, [selectedAddress]);
-
-  const findNearestStore = async (lng, lat) => {
+  const checkPincode = async (code) => {
     if (offlineMode) {
-      // Find closest using standard distance calculation
-      let minDistance = Infinity;
-      let closest = MOCK_STORES[0];
-      MOCK_STORES.forEach(s => {
-        const dist = Math.sqrt(Math.pow(s.location.coordinates[0] - lng, 2) + Math.pow(s.location.coordinates[1] - lat, 2));
-        if (dist < minDistance) {
-          minDistance = dist;
-          closest = s;
+      // Offline fallback: check against mock ADDR_OPTIONS and seeded codes
+      const mockCodes = ["110001", "110017", "110008"];
+      const isOk = mockCodes.includes(code.trim());
+      if (isOk) {
+        setPincodeVerified(true);
+        setCustomerPincode(code.trim());
+        localStorage.setItem("pincodeVerified", "true");
+        localStorage.setItem("customerPincode", code.trim());
+      }
+      return { success: true, available: isOk };
+    }
+
+    try {
+      const response = await api.get(`/admin/service-areas/check?pincode=${code.trim()}`);
+      if (response.data.success) {
+        if (response.data.available) {
+          setPincodeVerified(true);
+          setCustomerPincode(code.trim());
+          localStorage.setItem("pincodeVerified", "true");
+          localStorage.setItem("customerPincode", code.trim());
         }
-      });
-      setNearestStore(closest);
+        return { success: true, available: response.data.available };
+      }
+    } catch (error) {
+      console.warn("Pincode check API failed. Using local simulation check.");
+      const mockCodes = ["110001", "110017", "110008"];
+      const isOk = mockCodes.includes(code.trim());
+      if (isOk) {
+        setPincodeVerified(true);
+        setCustomerPincode(code.trim());
+        localStorage.setItem("pincodeVerified", "true");
+        localStorage.setItem("customerPincode", code.trim());
+      }
+      return { success: true, available: isOk };
+    }
+  };
+
+  const resetPincode = () => {
+    setPincodeVerified(false);
+    setCustomerPincode("");
+    localStorage.removeItem("pincodeVerified");
+    localStorage.removeItem("customerPincode");
+  };
+
+   const fetchProfile = async () => {
+     try {
+       const response = await api.get("/auth/profile");
+       if (response.data.success) {
+         setUser(response.data.data);
+         setRole(response.data.data.role);
+         if (response.data.data.pincode) {
+           setPincodeVerified(true);
+           setCustomerPincode(response.data.data.pincode);
+           localStorage.setItem("pincodeVerified", "true");
+           localStorage.setItem("customerPincode", response.data.data.pincode);
+         }
+       }
+     } catch (error) {
+       console.error("Profile fetch error, using locally cached profile details.");
+       setUser({
+         _id: "u_demo",
+         username: "quick_shopper",
+         email: "shopper@kartly.io",
+         fullname: "Alex Carter",
+         role: "user",
+         phone: "9876543210",
+         pincode: "110001",
+         address: { text: ADDR_OPTIONS[0].text, coordinates: ADDR_OPTIONS[0].coords }
+       });
+       setRole("user");
+     }
+   };
+
+  // Fetch product catalog
+  useEffect(() => {
+    fetchCatalog();
+  }, [offlineMode]);
+
+  const fetchCatalog = async () => {
+    if (offlineMode) {
+      setProducts(MOCK_PRODUCTS);
       return;
     }
 
     try {
-      const response = await api.get(`/catalog/nearest-store?longitude=${lng}&latitude=${lat}`);
-      if (response.data.success) {
-        setNearestStore(response.data.data);
-      }
-    } catch (error) {
-      console.warn("Failed to reach backend nearest store API, switching to offline simulation.");
-      setOfflineMode(true);
-      // fallback
-      let minDistance = Infinity;
-      let closest = MOCK_STORES[0];
-      MOCK_STORES.forEach(s => {
-        const dist = Math.sqrt(Math.pow(s.location.coordinates[0] - lng, 2) + Math.pow(s.location.coordinates[1] - lat, 2));
-        if (dist < minDistance) {
-          minDistance = dist;
-          closest = s;
-        }
-      });
-      setNearestStore(closest);
-    }
-  };
-
-  const fetchProfile = async () => {
-    try {
-      const response = await api.get("/auth/profile");
-      if (response.data.success) {
-        setUser(response.data.data);
-        setRole(response.data.data.role);
-        if (response.data.data.address?.text) {
-          // Sync with user saved coords
-          setSelectedAddress({
-            label: "Saved Profile Address",
-            text: response.data.data.address.text,
-            coords: response.data.data.address.coordinates
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Profile fetch error, using locally cached profile details.");
-      // Dummy profile
-      setUser({
-        _id: "u_demo",
-        username: "quick_shopper",
-        email: "shopper@kartly.io",
-        fullname: "Alex Carter",
-        role: "user",
-        address: { text: ADDR_OPTIONS[0].text, coordinates: ADDR_OPTIONS[0].coords }
-      });
-      setRole("user");
-    }
-  };
-
-  // Fetch product catalog for nearest store
-  useEffect(() => {
-    if (nearestStore) {
-      fetchCatalog(nearestStore._id);
-    }
-  }, [nearestStore, offlineMode]);
-
-  const fetchCatalog = async (storeId) => {
-    if (offlineMode) {
-      // Simulate store-specific stock fluctuations
-      const seedRandomStock = MOCK_PRODUCTS.map(p => {
-        // use last digit of storeId to seed different stock counts
-        const offset = storeId === "s2" ? 5 : storeId === "s3" ? -4 : 0;
-        return { ...p, stock: Math.max(2, p.stock + offset) };
-      });
-      setProducts(seedRandomStock);
-      return;
-    }
-
-    try {
-      const response = await api.get(`/catalog/products?storeId=${storeId}`);
+      // In single store model we just query products directly (store filters ignored or implicit)
+      const response = await api.get(`/catalog/products?storeId=s1`);
       if (response.data.success) {
         setProducts(response.data.data);
       }
     } catch (error) {
       setOfflineMode(true);
-      fetchCatalog(storeId);
+      setProducts(MOCK_PRODUCTS);
     }
   };
 
@@ -170,21 +202,21 @@ export function AppProvider({ children }) {
   const fetchOrders = async () => {
     if (offlineMode || !token) return;
     try {
+      // Vendor and Admin can see all store orders; customers see only their own
       let endpoint = "/orders/customer/history";
-      if (role === "admin") endpoint = "/orders/admin/all";
-      if (role === "rider") endpoint = "/orders/rider/available";
+      if (["admin", "vendor"].includes(role)) endpoint = "/orders/admin/all";
 
       const response = await api.get(endpoint);
       if (response.data.success) {
         setOrders(response.data.data);
-        // Sync active order if any
+        // Track active order for customer live tracker
         if (role === "user") {
-          const active = response.data.data.find(o => !["DELIVERED", "CANCELLED"].includes(o.status));
+          const active = response.data.data.find(o => !["PAYMENT_RECEIVED", "CANCELLED"].includes(o.status));
           if (active) setActiveOrder(active);
         }
       }
     } catch (error) {
-      console.warn("Backend unavailable for order lists. Using simulated order stack.");
+      console.warn("Backend unavailable for order lists.");
     }
   };
 
@@ -194,16 +226,32 @@ export function AppProvider({ children }) {
     return () => clearInterval(interval);
   }, [role, token, offlineMode]);
 
-  // Auth Operations
-  const handleLogin = async (username, password, selectedRole = "user") => {
-    if (offlineMode || username.includes("test") || username.includes("demo")) {
-      // Simulated Auth
+  // Auth Operations via OTP
+  const requestOtp = async (phone) => {
+    if (offlineMode || phone.includes("9999")) {
+      const mockOtp = "1234";
+      return { success: true, otp: mockOtp, message: `Demo OTP Generated: ${mockOtp}` };
+    }
+
+    try {
+      const response = await api.post("/auth/request-otp", { phone });
+      return { success: true, otp: response.data.otp, message: response.data.message };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "User not registered with this phone" };
+    }
+  };
+
+  const verifyOtp = async (phone, otp, selectedRole = "user") => {
+    if (offlineMode || phone.includes("9999")) {
+      // Simulated Auth — uses selectedRole for demo
       const dummyUser = {
         _id: `u_${selectedRole}_${Math.floor(Math.random() * 100)}`,
-        username: username || `${selectedRole}_guest`,
-        email: `${username || selectedRole}@kartly.io`,
-        fullname: username ? username.toUpperCase() : `Simulated ${selectedRole}`,
+        username: `user_${phone}`,
+        phone: phone,
+        email: `${phone}@kartly.io`,
+        fullname: selectedRole === "vendor" ? "Demo Vendor" : selectedRole === "admin" ? "System Admin" : "Demo Customer",
         role: selectedRole,
+        pincode: customerPincode || "110001",
         address: { text: selectedAddress.text, coordinates: selectedAddress.coords }
       };
       setUser(dummyUser);
@@ -214,7 +262,7 @@ export function AppProvider({ children }) {
     }
 
     try {
-      const response = await api.post("/auth/login", { username, password });
+      const response = await api.post("/auth/verify-otp", { phone, otp });
       if (response.data.success) {
         const { user: userResponse, accessToken } = response.data.data;
         setUser(userResponse);
@@ -224,42 +272,27 @@ export function AppProvider({ children }) {
         return { success: true };
       }
     } catch (error) {
-      // Fallback auth
-      const dummyUser = {
-        _id: `u_${selectedRole}_${Math.floor(Math.random() * 100)}`,
-        username: username,
-        email: `${username}@kartly.io`,
-        fullname: username.toUpperCase(),
-        role: selectedRole,
-        address: { text: selectedAddress.text, coordinates: selectedAddress.coords }
-      };
-      setUser(dummyUser);
-      setRole(selectedRole);
-      setToken("offline_token_jwt");
-      localStorage.setItem("accessToken", "offline_token_jwt");
-      setOfflineMode(true);
-      return { success: true };
+      return { success: false, message: error.response?.data?.message || "Invalid OTP verification code" };
     }
   };
 
-  const handleRegister = async (username, email, password, fullname, roleSelection) => {
+  const handleRegister = async (fullname, email, phone, addressText, pincode, roleSelection = "user") => {
+    if (offlineMode) {
+      return { success: true };
+    }
     try {
       const response = await api.post("/auth/register", {
-        username,
-        email,
-        password,
         fullname,
+        email,
+        phone,
+        addressText,
+        pincode,
         role: roleSelection,
-        addressText: selectedAddress.text,
         coordinates: selectedAddress.coords
       });
-      if (response.data.success) {
-        return { success: true };
-      }
+      return { success: true, message: response.data.message };
     } catch (error) {
-      console.warn("Register API failed, completing registration in simulated mode.");
-      setOfflineMode(true);
-      return { success: true };
+      return { success: false, message: error.response?.data?.message || "Registration failed" };
     }
   };
 
@@ -272,12 +305,11 @@ export function AppProvider({ children }) {
     localStorage.removeItem("accessToken");
   };
 
-  // Cart Operations
+  // Cart Operations (Stock tracking logic disabled by business requirements)
   const addToCart = (product) => {
     setCart(prev => {
       const existing = prev.find(item => item.product._id === product._id);
       if (existing) {
-        if (existing.quantity >= product.stock) return prev; // cap by stock
         return prev.map(item =>
           item.product._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
         );
@@ -304,8 +336,8 @@ export function AppProvider({ children }) {
     }
   };
 
-  // Checkout and Order placement
-  const handleCheckout = async () => {
+  // Checkout and Order placement (COD Only, supports Order Notes)
+  const handleCheckout = async (notes) => {
     if (cart.length === 0) return;
 
     const formattedItems = cart.map(item => ({
@@ -321,7 +353,7 @@ export function AppProvider({ children }) {
       
       const newOrder = {
         _id: `ord_${Math.floor(100000 + Math.random() * 900000)}`,
-        customer: user || { fullname: "Guest Shopper", address: selectedAddress },
+        customer: user || { fullname: "Guest Shopper", phone: "9876543210", pincode: customerPincode },
         store: nearestStore,
         items: cart.map(item => ({
           product: item.product,
@@ -331,24 +363,15 @@ export function AppProvider({ children }) {
         subtotal,
         deliveryFee,
         total,
-        status: "CONFIRMED",
+        status: "PLACED",
         deliveryAddress: { text: selectedAddress.text, coordinates: selectedAddress.coords },
         otp: Math.floor(1000 + Math.random() * 9000).toString(),
-        paymentStatus: "PAID",
-        timeline: [{ status: "CONFIRMED", timestamp: new Date() }],
+        paymentMethod: "COD",
+        paymentStatus: "PENDING",
+        notes: notes || "",
+        timeline: [{ status: "PLACED", timestamp: new Date() }],
         createdAt: new Date().toISOString()
       };
-
-      // Decrement simulated stock
-      setProducts(prev =>
-        prev.map(p => {
-          const cartItem = cart.find(ci => ci.product._id === p._id);
-          if (cartItem) {
-            return { ...p, stock: Math.max(0, p.stock - cartItem.quantity) };
-          }
-          return p;
-        })
-      );
 
       setOrders(prev => [newOrder, ...prev]);
       setActiveOrder(newOrder);
@@ -358,10 +381,10 @@ export function AppProvider({ children }) {
 
     try {
       const response = await api.post("/orders", {
-        storeId: nearestStore._id,
         items: formattedItems,
         deliveryAddressText: selectedAddress.text,
-        coordinates: selectedAddress.coords
+        coordinates: selectedAddress.coords,
+        notes: notes || ""
       });
 
       if (response.data.success) {
@@ -371,24 +394,25 @@ export function AppProvider({ children }) {
         return { success: true };
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Checkout failed. Stock availability might have changed.");
+      alert(error.response?.data?.message || "Checkout failed.");
     }
   };
 
-  // Admin Actions
+  // Admin/Vendor Actions
   const updateOrderState = async (orderId, newStatus, otpVal = "") => {
     if (offlineMode) {
       setOrders(prev =>
         prev.map(o => {
           if (o._id === orderId) {
             // Verify OTP
-            if (newStatus === "DELIVERED" && otpVal.toString() !== o.otp) {
-              alert("Invalid OTP! Delivery rejected.");
+            if (newStatus === "DELIVERED" && otpVal && otpVal.toString() !== o.otp) {
+              alert("Invalid OTP! Delivery verification failed.");
               return o;
             }
             const updated = {
               ...o,
               status: newStatus,
+              paymentStatus: newStatus === "PAYMENT_RECEIVED" ? "PAID" : o.paymentStatus,
               timeline: [...o.timeline, { status: newStatus, timestamp: new Date() }]
             };
             if (activeOrder && activeOrder._id === orderId) {
@@ -415,65 +439,13 @@ export function AppProvider({ children }) {
     }
   };
 
-  const assignRiderToOrder = async (orderId, riderId) => {
-    if (offlineMode) {
-      setOrders(prev =>
-        prev.map(o => {
-          if (o._id === orderId) {
-            const updated = {
-              ...o,
-              status: "ASSIGNED",
-              rider: { _id: riderId, fullname: riderId === "r1" ? "Rider Rohit" : "Rider Priya", role: "rider" },
-              timeline: [...o.timeline, { status: "ASSIGNED", timestamp: new Date() }]
-            };
-            if (activeOrder && activeOrder._id === orderId) {
-              setActiveOrder(updated);
-            }
-            return updated;
-          }
-          return o;
-        })
-      );
-      return;
-    }
-
-    try {
-      const response = await api.post(`/orders/${orderId}/assign`, { riderId });
-      if (response.data.success) {
-        fetchOrders();
-      }
-    } catch (error) {
-      alert("Failed to assign rider");
-    }
-  };
-
-  // Adjust stock count in store
   const adjustStock = async (productId, newStock) => {
-    if (offlineMode) {
-      setProducts(prev =>
-        prev.map(p => (p._id === productId ? { ...p, stock: newStock } : p))
-      );
-      return;
-    }
-
-    try {
-      const response = await api.post("/catalog/update-stock", {
-        storeId: nearestStore._id,
-        productId,
-        stock: newStock
-      });
-      if (response.data.success) {
-        fetchCatalog(nearestStore._id);
-      }
-    } catch (error) {
-      console.error("Stock adjust failed, falling back to local edit.");
-      setProducts(prev =>
-        prev.map(p => (p._id === productId ? { ...p, stock: newStock } : p))
-      );
-    }
+    // Stock counting retired in hyperlocal grocery requirements.
+    // Kept as standard catalog visibility helper in offline fallback.
+    alert("Quantity management is retired. Product catalog list is active.");
   };
 
-  // GPS Simulation Trigger (Out for Delivery -> Delivered movement)
+  // GPS Simulation Trigger (Ready for Delivery -> Delivered movement)
   useEffect(() => {
     let timer;
     if (isGpsSimulating) {
@@ -492,7 +464,7 @@ export function AppProvider({ children }) {
   }, [isGpsSimulating, simulationSpeed]);
 
   useEffect(() => {
-    if (activeOrder?.status === "OUT_FOR_DELIVERY" && !isGpsSimulating && gpsProgress < 100) {
+    if (activeOrder?.status === "READY_FOR_DELIVERY" && !isGpsSimulating && gpsProgress < 100) {
       setIsGpsSimulating(true);
     }
   }, [activeOrder?.status]);
@@ -509,24 +481,28 @@ export function AppProvider({ children }) {
         role, setRole,
         token, setToken,
         selectedAddress, setSelectedAddress,
-        nearestStore, setNearestStore,
+        nearestStore,
         products, setProducts,
         cart, setCart,
         orders, setOrders,
         activeOrder, setActiveOrder,
-        stores,
         offlineMode, setOfflineMode,
         addToCart, removeFromCart, updateCartQuantity,
-        handleLogin, handleRegister, handleLogout,
+        requestOtp, verifyOtp, handleRegister, handleLogout,
         handleCheckout,
         updateOrderState,
-        assignRiderToOrder,
         adjustStock,
         gpsProgress, setGpsProgress,
         isGpsSimulating, setIsGpsSimulating,
         simulationSpeed, setSimulationSpeed,
         resetGpsSimulation,
-        fetchOrders
+        fetchOrders,
+        pincodeVerified, setPincodeVerified,
+        customerPincode, setCustomerPincode,
+        checkPincode, resetPincode,
+        storeTimings, setStoreTimings,
+        isStoreOpen,
+        fetchStoreTimings
       }}
     >
       {children}

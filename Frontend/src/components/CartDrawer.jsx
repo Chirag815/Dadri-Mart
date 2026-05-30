@@ -1,26 +1,31 @@
 import React, { useState, useContext } from "react";
 import { AppContext } from "../context/AppContext";
-import { ShoppingBag, X, CheckCircle, Minus, Plus, CreditCard } from "lucide-react";
+import { ShoppingBag, X, CheckCircle, Minus, Plus, CreditCard, AlertCircle } from "lucide-react";
 
 export default function CartDrawer({ onClose }) {
-  const { cart, removeFromCart, addToCart, handleCheckout } = useContext(AppContext);
+  const { cart, removeFromCart, addToCart, handleCheckout, isStoreOpen } = useContext(AppContext);
   const [checkingOut, setCheckingOut] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [orderNotes, setOrderNotes] = useState("");
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const deliveryFee = subtotal > 500 || subtotal === 0 ? 0 : 25;
   const total = subtotal + deliveryFee;
 
   const triggerCheckout = async () => {
+    if (!isStoreOpen) {
+      alert("Store is closed. Checkout is unavailable.");
+      return;
+    }
     setCheckingOut(true);
-    // Simulate Card Authorization screen delay
+    // Simulate short processing delay
     setTimeout(async () => {
-      const res = await handleCheckout();
+      const res = await handleCheckout(orderNotes);
       setCheckingOut(false);
       if (res?.success) {
         setSuccess(true);
       }
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -48,9 +53,9 @@ export default function CartDrawer({ onClose }) {
             <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/10">
               <CheckCircle className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-black text-white">Order Confirmed!</h2>
+            <h2 className="text-2xl font-black text-white">Order Placed!</h2>
             <p className="text-xs text-gray-400 max-w-[250px] leading-relaxed">
-              We have locked inventory in the nearest store. Packers are starting picking list. Watch live tracking on customer home page!
+              Your Cash on Delivery order is registered successfully. Watch live tracking timeline on your customer dashboard!
             </p>
             <button
               onClick={onClose}
@@ -63,10 +68,10 @@ export default function CartDrawer({ onClose }) {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-2">
             <ShoppingBag className="w-12 h-12 text-gray-600" />
             <h4 className="font-bold text-white">Cart is Empty</h4>
-            <p className="text-xs text-gray-500">Add fresh milk, organic veggies and snacks to check out!</p>
+            <p className="text-xs text-gray-500">Add fresh groceries and snacks to place your order!</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto py-4 divide-y divide-gray-900 space-y-4">
+          <div className="flex-1 overflow-y-auto py-4 divide-y divide-gray-900 space-y-4 text-left">
             {cart.map((item) => (
               <div key={item.product._id} className="flex items-start gap-4 py-3">
                 <img src={item.product.image} alt={item.product.name} className="w-14 h-14 object-cover rounded-xl bg-gray-950 border border-gray-900 shrink-0" />
@@ -78,7 +83,7 @@ export default function CartDrawer({ onClose }) {
                   <div className="flex items-center gap-3 bg-gray-950/80 border border-gray-800 rounded-lg px-2 py-1 w-fit mt-2">
                     <button onClick={() => removeFromCart(item.product._id)} className="text-gray-400 hover:text-emerald-400 p-0.5"><Minus className="w-3 h-3" /></button>
                     <span className="text-white font-extrabold text-xs min-w-[12px] text-center">{item.quantity}</span>
-                    <button onClick={() => addToCart(item.product)} className="text-gray-400 hover:text-emerald-400 p-0.5" disabled={item.quantity >= item.product.stock}><Plus className="w-3 h-3" /></button>
+                    <button onClick={() => addToCart(item.product)} className="text-gray-400 hover:text-emerald-400 p-0.5"><Plus className="w-3 h-3" /></button>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -86,6 +91,18 @@ export default function CartDrawer({ onClose }) {
                 </div>
               </div>
             ))}
+
+            {/* Delivery Notes Text Area */}
+            <div className="pt-4 space-y-2">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Order Notes (Optional)</label>
+              <textarea
+                placeholder="Call before delivery, No plastic bags, Deliver after 6 PM..."
+                value={orderNotes}
+                onChange={(e) => setOrderNotes(e.target.value)}
+                rows="2"
+                className="w-full glass-input p-3 rounded-xl text-xs text-white resize-none"
+              />
+            </div>
           </div>
         )}
 
@@ -103,34 +120,35 @@ export default function CartDrawer({ onClose }) {
                   {deliveryFee === 0 ? <span className="text-emerald-400 font-extrabold uppercase text-[10px]">Free</span> : `₹${deliveryFee}`}
                 </span>
               </div>
-              {subtotal < 500 && (
-                <div className="bg-emerald-500/5 border border-emerald-500/10 p-2 rounded-lg text-[10px] text-emerald-400 font-medium">
-                  💡 Shop for <strong>₹{500 - subtotal}</strong> more to unlock FREE delivery!
-                </div>
-              )}
               <div className="flex items-center justify-between border-t border-gray-900 pt-2 text-base font-extrabold text-white">
-                <span>Order Total</span>
+                <span>Order Total (COD)</span>
                 <span className="text-emerald-400 text-lg">₹{total}</span>
               </div>
             </div>
 
-            <button
-              onClick={triggerCheckout}
-              disabled={checkingOut}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-800 disabled:text-gray-600 text-gray-950 font-black py-4 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20 text-sm flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
-            >
-              {checkingOut ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></div>
-                  <span>Authorizing Card...</span>
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-4 h-4" />
-                  <span>Simulate Payment & Order</span>
-                </>
-              )}
-            </button>
+            {!isStoreOpen ? (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3.5 rounded-xl flex items-center gap-2 text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>Store Closed. Ordering is disabled.</span>
+              </div>
+            ) : (
+              <button
+                onClick={triggerCheckout}
+                disabled={checkingOut}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-800 disabled:text-gray-600 text-gray-950 font-black py-4 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20 text-sm flex items-center justify-center gap-2 cursor-pointer uppercase tracking-wider"
+              >
+                {checkingOut ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing Order...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Place Cash on Delivery (COD) Order</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
 

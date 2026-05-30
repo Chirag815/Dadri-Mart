@@ -50,15 +50,15 @@ const orderSchema = new Schema(
     status: {
       type: String,
       enum: [
-        "CONFIRMED",
-        "PICKING",
-        "PACKED",
-        "ASSIGNED",
-        "OUT_FOR_DELIVERY",
+        "PLACED",
+        "ACCEPTED",
+        "PACKING",
+        "READY_FOR_DELIVERY",
         "DELIVERED",
+        "PAYMENT_RECEIVED",
         "CANCELLED",
       ],
-      default: "CONFIRMED",
+      default: "PLACED",
     },
     deliveryAddress: {
       text: { type: String, required: true },
@@ -71,12 +71,16 @@ const orderSchema = new Schema(
     },
     paymentMethod: {
       type: String,
-      default: "CARD",
+      default: "COD",
     },
     paymentStatus: {
       type: String,
       enum: ["PENDING", "PAID", "REFUNDED"],
-      default: "PAID",
+      default: "PENDING",
+    },
+    notes: {
+      type: String,
+      default: ""
     },
     timeline: [
       {
@@ -90,10 +94,10 @@ const orderSchema = new Schema(
   }
 );
 
-// Pre-save to auto-push confirmed to timeline
+// Pre-save to auto-push PLACED to timeline
 orderSchema.pre("save", function (next) {
   if (this.isNew && this.timeline.length === 0) {
-    this.timeline.push({ status: "CONFIRMED", timestamp: new Date() });
+    this.timeline.push({ status: "PLACED", timestamp: new Date() });
   }
   next();
 });

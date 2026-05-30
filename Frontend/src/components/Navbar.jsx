@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { AppContext, ADDR_OPTIONS } from "../context/AppContext";
+import { Link } from "react-router-dom";
 import { ShoppingBag, MapPin, Compass, LogOut, ShoppingBag as CartIcon } from "lucide-react";
 import CartDrawer from "./CartDrawer";
 
@@ -98,13 +99,18 @@ export default function Navbar() {
                 </button>
               )}
 
-              <button
-                onClick={handleLogout}
-                title="Logout"
-                className="p-2 rounded-xl bg-gray-900/60 border border-gray-800 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition-colors cursor-pointer"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <Link to="/profile" className="p-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-200 transition-colors text-sm">
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  title="Logout"
+                  className="p-2 rounded-xl bg-gray-900/60 border border-gray-800 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           ) : (
             <span className="text-sm font-semibold text-gray-400">Hyperlocal Quick Dispatch</span>
